@@ -1,89 +1,159 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../../vendor/presentation/controllers/vendor_controller.dart';
+import '../../../../vendor/domain/models/vendor.dart';
+import '../../../presentation/controllers/home_controller.dart';
 import '../../../../vendor/presentation/views/vendor_list_view.dart';
-import '../../../../vendor/presentation/widgets/vendor_card.dart';
 
 class RecentVendorsWidget extends StatelessWidget {
-  final VendorController controller;
+  final HomeController homeController;
 
-  const RecentVendorsWidget({super.key, required this.controller});
+  const RecentVendorsWidget({super.key, required this.homeController});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.vendors.isEmpty) {
-        return const Center(child: CircularProgressIndicator());
+      /// SKELETON LOADING
+      if (homeController.isLoading.value) {
+        return _buildSkeleton();
       }
 
-      // Get only the first 5 vendors (or last 5 if you want recent)
-      final recentVendors = controller.vendors.take(5).toList();
+      if (homeController.topVendors.isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('No vendors available'),
+        );
+      }
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with "See All" link
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Vendors',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to full vendors page
-                    Get.to(() => VendorListView());
-                  },
-                  child: const Row(
-                    children: [
-                      Text(
-                        'See All',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.blue),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Horizontal List of Vendors
-          SizedBox(
-            height: 180, // Adjust based on your card design
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              itemCount: recentVendors.length,
-              itemBuilder: (context, index) {
-                final vendor = recentVendors[index];
-                return Container(
-                  width: 160, // Card width
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: VendorCard(
-                    vendor: vendor,
-                    onTap: () {
-                      // Navigate to vendor details
-                      controller.selectVendor(vendor as String);
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
+          _header(),
+          _vendorList(homeController.topVendors),
         ],
       );
     });
+  }
+
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Top Vendors',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          TextButton(
+            onPressed: () => Get.to(() => VendorListView()),
+            child: const Text('See All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vendorList(List<Vendor> vendors) {
+    return SizedBox(
+      height: 230,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: vendors.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, index) {
+          final vendor = vendors[index];
+          return SizedBox(
+            width: 170,
+            child: _VendorCard(vendor: vendor),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSkeleton() {
+    return SizedBox(
+      height: 230,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: 5,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, _) => const SizedBox(
+          width: 170,
+          child: _VendorSkeleton(),
+        ),
+      ),
+    );
+  }
+}
+
+/// ================= CARD =================
+
+class _VendorCard extends StatelessWidget {
+  final Vendor vendor;
+
+  const _VendorCard({required this.vendor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () => Get.toNamed('/vendor/${vendor.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Hero(
+                tag: 'vendor-logo-${vendor.id}',
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey.shade200,
+                  ),
+                  child: vendor.logo != null
+                      ? Image.network(vendor.logo!, fit: BoxFit.cover)
+                      : const Icon(Icons.business),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                vendor.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VendorSkeleton extends StatelessWidget {
+  const _VendorSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(width: 50, height: 50, color: Colors.grey.shade300),
+            const SizedBox(height: 12),
+            Container(height: 12, width: 80, color: Colors.grey.shade300),
+          ],
+        ),
+      ),
+    );
   }
 }

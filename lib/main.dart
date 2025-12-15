@@ -20,7 +20,8 @@ void main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnnonKey,
   );
-
+// Register with GetX
+  Get.put<SupabaseClient>(Supabase.instance.client);
   // 3. Configure GetX
   Get.config(
     enableLog: true,

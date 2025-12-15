@@ -1,45 +1,43 @@
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../routes/app_pages.dart';
+import '../../../vendor/data/repositories/vendor_repository.dart';
+import '../../../vendor/domain/models/vendor.dart';
+ import '../../../vendor/domain/usecases/get_top_vendors_usecase.dart';
 
 class HomeController extends GetxController {
-  // ✅ Constructor بسيط بدون parameters
-  HomeController();
+  final VendorRepository repository;
 
-  // الحصول على Supabase instance داخل الكلاس
-  SupabaseClient get supabase => Supabase.instance.client;
+  HomeController(this.repository);
 
-  final isLoading = false.obs;
-  final vendorCount = 0.obs;
-  final countryCount = 0.obs;
-  final activeCount = 0.obs;
+  final RxList<Vendor> topVendors = <Vendor>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxString error = ''.obs;
+
+  late final GetTopVendorsUseCase _getTopVendors;
+
+  bool _loadedOnce = false;
 
   @override
   void onInit() {
     super.onInit();
-    loadStats();
+    _getTopVendors = GetTopVendorsUseCase(repository);
+    loadTopVendors();
   }
 
-  Future<void> loadStats() async {
-    isLoading.value = true;
+  Future<void> loadTopVendors() async {
+    if (_loadedOnce) return;
+    _loadedOnce = true;
+
     try {
-      // TODO: Implement actual stats loading
-      vendorCount.value = 12;
-      countryCount.value = 8;
-      activeCount.value = 10;
+      isLoading.value = true;
+      error.value = '';
+
+      final result = await _getTopVendors.execute();
+      topVendors.assignAll(result);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load stats: $e');
+      error.value = e.toString();
+      topVendors.clear();
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  Future<void> signOut() async {
-    try {
-      await supabase.auth.signOut();
-      Get.offAllNamed(Routes.LOGIN);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to sign out: $e');
     }
   }
 }

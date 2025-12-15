@@ -2,128 +2,105 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:implant_finder/features/home/presentation/views/widgets/recent_vendors_widget.dart';
 
-import '../../../vendor/data/repositories/vendor_repository_impl.dart';
-import '../../../vendor/presentation/controllers/vendor_controller.dart';
 import '../../../vendor/presentation/views/vendor_list_view.dart';
+import '../controllers/home_controller.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
-
   @override
   Widget build(BuildContext context) {
-    final VendorController vendorController = Get.put(
-      VendorController(
-        VendorRepositoryImpl(Get.find()), // Repository dependency
-      ),
+    final homeController = Get.put(
+      HomeController(Get.find()),
+      permanent: true,
     );
-    // Load vendors when home page is opened
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      vendorController.loadTopVendors();
-    });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Implant Finder'),
-      ),
+      appBar: AppBar(title: const Text('Implant Finder')),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Welcome section
-            Container(
-              padding: const EdgeInsets.all(20),
-              color: Colors.blue[50],
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome to Implant Finder',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Find medical implant vendors worldwide',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
+            _welcome(),
 
             const SizedBox(height: 20),
 
-            // Recent Vendors Section
-            RecentVendorsWidget(controller: vendorController),
+            /// TOP VENDORS (HOME CONTROLLER)
+            RecentVendorsWidget(homeController: homeController),
 
             const SizedBox(height: 20),
 
-            // Other home page sections can go here
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    childAspectRatio: 2.5,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    children: [
-                      _buildActionCard(
-                        icon: Icons.search,
-                        title: 'Search Vendors',
-                        onTap: () => Get.to(() => VendorListView()),
-                      ),
-                      _buildActionCard(
-                        icon: Icons.map,
-                        title: 'View by Country',
-                        onTap: () {
-                          // Navigate to country filter view
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            _quickActions(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionCard({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+  Widget _welcome() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade100, Colors.white],
+        ),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Welcome to Implant Finder',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Find trusted implant vendors worldwide',
+            style: TextStyle(color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickActions() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Quick Actions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            childAspectRatio: 2.6,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            children: [
+              _action(Icons.search, 'Search Vendors', () => Get.to(() => VendorListView())),
+              _action(Icons.public, 'By Country', () {}),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _action(IconData icon, String title, VoidCallback onTap) {
     return Card(
-      elevation: 2,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               Icon(icon, color: Colors.blue),
               const SizedBox(width: 12),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
             ],
           ),
         ),
