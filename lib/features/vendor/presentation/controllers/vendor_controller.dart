@@ -1,177 +1,321 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../data/repositories/vendor_repository.dart';
 import '../../domain/models/vendor.dart';
+import '../../domain/usecases/SearchVendorsUseCase.dart';
+import '../../domain/usecases/get_vendors_by_country_usecase.dart';
 import '../../domain/usecases/get_vendors_usecase.dart';
-import '../../data/repositories/vendor_repository_impl.dart';
 
 class VendorController extends GetxController {
-  final VendorRepositoryImpl _repository;
-  final GetVendorsUseCase _getVendorsUseCase;
-  final GetVendorsByCountryUseCase _getVendorsByCountryUseCase;
+  final VendorRepository repository;
 
-  VendorController(this._repository)
-      : _getVendorsUseCase = GetVendorsUseCase(_repository),
-        _getVendorsByCountryUseCase = GetVendorsByCountryUseCase(_repository);
+  VendorController(this.repository);
 
-  // State
-  final RxList<Vendor> _vendors = <Vendor>[].obs;
-  final Rx<Vendor?> _selectedVendor = Rx<Vendor?>(null);
-  final RxBool _isLoading = false.obs;
-  final RxString _error = ''.obs;
-  final RxList<String> _countries = <String>[].obs;
-  final RxString _searchQuery = ''.obs;
-  final RxString _selectedCountry = ''.obs;
+  // ================= STATE =================
 
-  // ⚠️ أضف onInit
+  /// All vendors
+  final RxList<Vendor> vendors = <Vendor>[].obs;
+
+  /// Filtered vendors (search / country)
+  final RxList<Vendor> filteredVendors = <Vendor>[].obs;
+
+  /// Loading state
+  final RxBool isLoading = false.obs;
+
+  /// Error message
+  final RxString error = ''.obs;
+
+  /// Selected country filter
+  final RxString selectedCountry = ''.obs;
+
+  /// Search query
+  final RxString searchQuery = ''.obs;
+
+  /// Countries list (derived)
+  final RxList<String> countries = <String>[].obs;
+
+  /// Search controller for text field
+  final TextEditingController searchController = TextEditingController();
+
+  // ================= USE CASES =================
+  late final GetVendorsUseCase _getVendors;
+  late final GetVendorsByCountryUseCase _getVendorsByCountry;
+  late final SearchVendorsUseCase _searchVendors;
+
   @override
   void onInit() {
     super.onInit();
-    print('🚀 VendorController initialized');
-    print('   Repository: $_repository');
 
-    // Load vendors بعد تأخير بسيط
-    Future.delayed(Duration(milliseconds: 500), () {
-      print('🔄 Auto-loading vendors from onInit...');
-      loadVendors();
-    });
-  }
-  // Getters
-  List<Vendor> get vendors => _vendors.toList();
-  Vendor? get selectedVendor => _selectedVendor.value;
-  bool get isLoading => _isLoading.value;
-  String get error => _error.value;
-  List<String> get countries => _countries.toList();
-  String get searchQuery => _searchQuery.value;
-  String get selectedCountry => _selectedCountry.value;
+    _getVendors = GetVendorsUseCase(repository);
+    _getVendorsByCountry = GetVendorsByCountryUseCase(repository);
+    _searchVendors = SearchVendorsUseCase(repository);
 
-  // Computed getters
-  List<Vendor> get filteredVendors {
-    var filtered = vendors;
-
-    if (selectedCountry.isNotEmpty) {
-      filtered = filtered.where((v) => v.organ == selectedCountry).toList();
-    }
-
-    if (searchQuery.isNotEmpty) {
-      filtered = filtered.where((v) =>
-      v.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          (v.email?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false)
-      ).toList();
-    }
-
-    return filtered;
-  }
-
-  Map<String, List<Vendor>> get vendorsByCountry {
-    final Map<String, List<Vendor>> grouped = {};
-    for (var vendor in vendors) {
-      final country = vendor.organ ?? 'Unknown';
-      if (!grouped.containsKey(country)) {
-        grouped[country] = [];
-      }
-      grouped[country]!.add(vendor);
-    }
-    return grouped;
-  }
-
-  // Actions
-  Future<void> loadVendors() async {
-    try {
-      print('🔄 Loading vendors...');
-      _isLoading.value = true;
-      _error.value = '';
-
-      final vendors = await _getVendorsUseCase.execute();
-      print('📊 Vendors loaded: ${vendors.length} items');
-
-      // طباعة أول 3 موردين للتأكد
-      for (int i = 0; i < vendors.length && i < 3; i++) {
-        print('   ${i + 1}. ${vendors[i].name} - ${vendors[i].organ}');
-      }
-
-      _vendors.assignAll(vendors);
-
-      // Extract unique countries
-      final countrySet = vendors
-          .map((v) => v.organ)
-          .where((country) => country != null && country.isNotEmpty)
-          .cast<String>()
-          .toSet();
-      _countries.assignAll(countrySet.toList()..sort());
-
-      print('📍 Countries found: $_countries');
-
-      update();
-    } catch (e) {
-      print('❌ Error loading vendors: $e');
-      _error.value = 'Failed to load vendors: $e';
-      Get.snackbar('Error', _error.value);
-    } finally {
-      _isLoading.value = false;
-      print('✅ Loading completed');
-    }
-  }
-  Future<void> loadVendorsByCountry(String country) async {
-    try {
-      _isLoading.value = true;
-      _selectedCountry.value = country;
-
-      final vendors = await _getVendorsByCountryUseCase.execute(country);
-      _vendors.assignAll(vendors);
-    } catch (e) {
-      _error.value = 'Failed to load vendors: $e';
-      Get.snackbar('Error', _error.value);
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> selectVendor(String id) async {
-    try {
-      _isLoading.value = true;
-      final vendor = await _repository.getVendorById(id);
-      _selectedVendor.value = vendor;
-    } catch (e) {
-      _error.value = 'Failed to load vendor details: $e';
-      Get.snackbar('Error', _error.value);
-    } finally {
-      _isLoading.value = false;
-    }
-  }
-
-  Future<void> search(String query) async {
-    _searchQuery.value = query;
-    if (query.length >= 2) {
-      try {
-        _isLoading.value = true;
-        final results = await _repository.searchVendors(query);
-        _vendors.assignAll(results);
-      } catch (e) {
-        _error.value = 'Failed to search: $e';
-      } finally {
-        _isLoading.value = false;
-      }
-    }
-  }
-
-  void clearFilters() {
-    _selectedCountry.value = '';
-    _searchQuery.value = '';
     loadVendors();
-  }
 
-  void setCountryFilter(String country) {
-    _selectedCountry.value = country;
+    // Listen to search controller changes for real-time search
+    searchController.addListener(() {
+      // We'll debounce this in the actual search method
+      if (searchController.text != searchQuery.value) {
+        _performSearch(searchController.text);
+      }
+    });
   }
 
   @override
   void onClose() {
-    _vendors.close();
-    _selectedVendor.close();
-    _isLoading.close();
-    _error.close();
-    _countries.close();
-    _searchQuery.close();
-    _selectedCountry.close();
+    searchController.dispose();
     super.onClose();
+  }
+
+  // ================= LOAD =================
+
+  Future<void> loadVendors() async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final result = await _getVendors.execute();
+
+      vendors.assignAll(result);
+      filteredVendors.assignAll(result);
+
+      _extractCountries(result);
+    } catch (e) {
+      error.value = e.toString();
+      vendors.clear();
+      filteredVendors.clear();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= FILTER =================
+
+  Future<void> setCountryFilter(String country) async {
+    if (selectedCountry.value == country) return;
+
+    selectedCountry.value = country;
+    searchController.clear(); // Clear search when filtering by country
+    searchQuery.value = '';
+
+    if (country.isEmpty) {
+      // If no country selected, show all vendors
+      filteredVendors.assignAll(vendors);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final result = await _getVendorsByCountry.execute(country);
+      filteredVendors.assignAll(result);
+    } catch (e) {
+      error.value = e.toString();
+      filteredVendors.assignAll(vendors.where((v) => v.organ == country).toList());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= SEARCH =================
+
+  // Real-time search with debouncing
+  void _performSearch(String query) {
+    // Cancel any previous debounce
+    Get.find<VendorController>().searchQuery.value = query;
+
+    // Debounce search to avoid too many API calls
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (query == searchQuery.value) {
+        _executeSearch(query);
+      }
+    });
+  }
+
+  // Manual search trigger
+  Future<void> search(String query) async {
+    searchQuery.value = query;
+    searchController.text = query;
+    await _executeSearch(query);
+  }
+
+  // Actual search execution
+  Future<void> _executeSearch(String query) async {
+    // Clear country filter when searching
+    selectedCountry.value = '';
+
+    if (query.isEmpty) {
+      filteredVendors.assignAll(vendors);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final result = await _searchVendors.execute(query);
+      filteredVendors.assignAll(result);
+    } catch (e) {
+      error.value = e.toString();
+      // Fallback to local search if API fails
+      filteredVendors.assignAll(
+          vendors.where((v) =>
+          v.name.toLowerCase().contains(query.toLowerCase()) ||
+              (v.organ?.toLowerCase().contains(query.toLowerCase()) ?? false)
+          ).toList()
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= COMBINED FILTERS =================
+
+  Future<void> applyCombinedFilters() async {
+    if (selectedCountry.value.isEmpty && searchQuery.value.isEmpty) {
+      filteredVendors.assignAll(vendors);
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      List<Vendor> result = vendors;
+
+      // Apply country filter
+      if (selectedCountry.value.isNotEmpty) {
+        result = result.where((v) => v.organ == selectedCountry.value).toList();
+      }
+
+      // Apply search filter
+      if (searchQuery.value.isNotEmpty) {
+        final query = searchQuery.value.toLowerCase();
+        result = result.where((v) =>
+        v.name.toLowerCase().contains(query) ||
+            (v.organ?.toLowerCase().contains(query) ?? false)
+        ).toList();
+      }
+
+      filteredVendors.assignAll(result);
+    } catch (e) {
+      error.value = e.toString();
+      // Fallback to local filtering
+      _applyLocalFilters();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _applyLocalFilters() {
+    List<Vendor> result = vendors;
+
+    if (selectedCountry.value.isNotEmpty) {
+      result = result.where((v) => v.organ == selectedCountry.value).toList();
+    }
+
+    if (searchController.text.isNotEmpty) {
+      final query = searchController.text.toLowerCase();
+      result = result.where((v) =>
+      v.name.toLowerCase().contains(query) ||
+          (v.organ?.toLowerCase().contains(query) ?? false)
+      ).toList();
+    }
+
+    filteredVendors.assignAll(result);
+  }
+
+  // ================= CLEAR =================
+
+  void clearFilters() {
+    selectedCountry.value = '';
+    searchQuery.value = '';
+    searchController.clear();
+
+    // Reset to all vendors
+    filteredVendors.assignAll(vendors);
+    error.value = '';
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
+    searchController.clear();
+    // If country filter is active, maintain it
+    if (selectedCountry.value.isNotEmpty) {
+      filteredVendors.assignAll(
+          vendors.where((v) => v.organ == selectedCountry.value).toList()
+      );
+    } else {
+      filteredVendors.assignAll(vendors);
+    }
+  }
+
+  void clearCountryFilter() {
+    selectedCountry.value = '';
+    // If search is active, maintain it
+    if (searchQuery.value.isNotEmpty) {
+      _executeSearch(searchQuery.value);
+    } else {
+      filteredVendors.assignAll(vendors);
+    }
+  }
+
+  // ================= HELPERS =================
+
+  void _extractCountries(List<Vendor> list) {
+    final uniqueCountries = list
+        .map((e) => e.organ)
+        .whereType<String>()
+        .where((country) => country.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    countries.assignAll(uniqueCountries);
+  }
+
+  // Vendor statistics
+  int get totalVendors => vendors.length;
+  int get filteredVendorCount => filteredVendors.length;
+
+  bool get hasActiveFilters =>
+      selectedCountry.value.isNotEmpty || searchQuery.value.isNotEmpty;
+
+  // ================= NAVIGATION =================
+// In vendor_controller.dart
+  void selectVendor(String id) {
+    // Check if id is valid before navigating
+    if (id.isEmpty) {
+      Get.snackbar('Error', 'Invalid vendor ID',
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
+      return;
+    }
+
+    // Navigate to vendor details
+    Get.toNamed('/vendor/$id');
+  }
+
+  // ================= REFRESH =================
+
+  Future<void> refreshVendors() async {
+    await loadVendors();
+  }
+
+  // ================= UTILITY =================
+
+  /// Get vendors by country for the filter chips
+  List<Vendor> getVendorsByCountry(String country) {
+    return vendors.where((v) => v.organ == country).toList();
+  }
+
+  /// Get vendor by ID
+  Vendor? getVendorById(String id) {
+    try {
+      return vendors.firstWhere((vendor) => vendor.id == id);
+    } catch (e) {
+      return null;
+    }
   }
 }

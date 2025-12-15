@@ -89,13 +89,13 @@ class VendorCard extends StatelessWidget {
                     ],
                   ).pOnly(bottom: 8),
 
-                if (vendor.phone.isNotEmpty)
+                if (vendor.phones.isNotEmpty)
                   Row(
                     children: [
                       Icon(Icons.phone, size: 16, color: Colors.grey),
                       8.widthBox,
                       Expanded(
-                        child: vendor.phone.first.text.sm.make(),
+                        child: vendor.phones.first.text.sm.make(),
                       ),
                     ],
                   ).pOnly(bottom: 8),

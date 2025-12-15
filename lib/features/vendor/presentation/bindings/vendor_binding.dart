@@ -1,39 +1,42 @@
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../data/repositories/vendor_repository_impl.dart';
 import '../controllers/vendor_controller.dart';
 import '../controllers/vendor_form_controller.dart';
 
+
 class VendorBinding extends Bindings {
   @override
   void dependencies() {
-    // ⚠️ تأكد من وجود SupabaseClient أولاً
-    // إذا لم يكن مسجلاً، سجله هنا
-    SupabaseClient supabaseClient;
-    try {
-      supabaseClient = Get.find<SupabaseClient>();
-      print('✅ Found SupabaseClient in GetX');
-    } catch (e) {
-      // إذا لم يكن موجوداً، أنشئه
-      supabaseClient = Supabase.instance.client;
-      Get.put<SupabaseClient>(supabaseClient, permanent: true);
-      print('⚠️ SupabaseClient not found, registered it');
+    // ================= Supabase =================
+    if (!Get.isRegistered<SupabaseClient>()) {
+      Get.put<SupabaseClient>(
+        Supabase.instance.client,
+        permanent: true,
+      );
     }
 
-    // إنشاء repository
-    final repository = VendorRepositoryImpl(supabaseClient);
+    final supabase = Get.find<SupabaseClient>();
 
-    // تسجيل controllers
+    // ================= Repository =================
+    Get.lazyPut<VendorRepositoryImpl>(
+          () => VendorRepositoryImpl(supabase),
+      fenix: true,
+    );
+
+    // ================= Controllers =================
     Get.lazyPut<VendorController>(
-          () => VendorController(repository),
+          () => VendorController(Get.find<VendorRepositoryImpl>()),
       fenix: true,
     );
 
     Get.lazyPut<VendorFormController>(
-          () => VendorFormController(repository, supabaseClient),
+          () => VendorFormController(
+        Get.find<VendorRepositoryImpl>(),
+        supabase,
+      ),
       fenix: true,
     );
-
-    print('✅ VendorBinding dependencies loaded');
   }
 }

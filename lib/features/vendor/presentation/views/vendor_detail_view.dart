@@ -40,11 +40,11 @@ class VendorDetailView extends GetView {
             ]).p(16),
 
             // Phone Numbers
-            if (vendor.phone.isNotEmpty)
+            if (vendor.phones.isNotEmpty)
               Card(
                 child: VStack([
                   'Contact Numbers'.text.xl.bold.make().pOnly(bottom: 12),
-                  ...vendor.phone.map((phone) =>
+                  ...vendor.phones.map((phone) =>
                       HStack([
                         Icon(Icons.phone, size: 16, color: MyAppColors.primaryColor),
                         8.widthBox,

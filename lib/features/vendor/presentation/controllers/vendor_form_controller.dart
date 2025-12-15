@@ -1,31 +1,238 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../data/repositories/vendor_repository.dart';
 import '../../domain/models/vendor.dart';
-import '../../data/repositories/vendor_repository_impl.dart';
 
 class VendorFormController extends GetxController {
-  final VendorRepositoryImpl _repository;
-  final SupabaseClient _supabase;
+  final VendorRepository repository;
+  final SupabaseClient supabase;
+  final ImagePicker _picker = ImagePicker();
 
-  VendorFormController(this._repository, this._supabase);
+  VendorFormController(this.repository, this.supabase);
 
-  // Form Key
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-  // Controllers
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController countryController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController websiteController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController logoController = TextEditingController();
-  final List<TextEditingController> phoneControllers = [TextEditingController()];
-
-  // State
+  // ================= STATE =================
   final RxBool isLoading = false.obs;
   final RxBool isEditing = false.obs;
-  final Rx<String?> vendorId = Rx<String?>(null);
+  final Rx<Vendor?> currentVendor = Rx<Vendor?>(null);
+  final formKey = GlobalKey<FormState>();
+
+  // Text controllers
+  final nameController = TextEditingController();
+  final countryController = TextEditingController();
+  final emailController = TextEditingController();
+  final websiteController = TextEditingController();
+  final addressController = TextEditingController();
+  final logoController = TextEditingController();
+  final List<TextEditingController> phoneControllers = [TextEditingController()];
+
+  // Store only File, convert to bytes when needed
+  final Rx<File?> pickedLogo = Rx<File?>(null);
+
+  // ================= PHONE FIELD MANAGEMENT =================
+
+  void addPhoneField() {
+    phoneControllers.add(TextEditingController());
+    update();
+  }
+
+  void removePhoneField(int index) {
+    if (phoneControllers.length > 1) {
+      phoneControllers[index].dispose();
+      phoneControllers.removeAt(index);
+      update();
+    }
+  }
+
+  void clearPhoneFields() {
+    for (var controller in phoneControllers) {
+      controller.dispose();
+    }
+    phoneControllers.clear();
+    phoneControllers.add(TextEditingController());
+    update();
+  }
+
+  // ================= LOGO PICKER =================
+
+  Future<void> pickLogoFromGallery() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (image != null) {
+        final file = File(image.path);
+        pickedLogo.value = file;
+        logoController.text = image.path; // Store local path
+        update();
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to pick image: $e');
+    }
+  }
+
+  // ================= SUPABASE LOGO UPLOAD =================
+
+  Future<String?> uploadLogoToSupabase() async {
+    // If no logo was picked, use existing URL
+    if (pickedLogo.value == null) {
+      final existingUrl = logoController.text.trim();
+      return existingUrl.isEmpty ? null : existingUrl;
+    }
+
+    try {
+      // Convert File to bytes for Supabase
+      final bytes = await pickedLogo.value!.readAsBytes();
+      final fileName = 'vendor_logo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Upload to Supabase
+      await supabase.storage
+          .from('vendor-logos')
+          .upload(fileName, bytes as File);
+
+      // Get public URL
+      final publicUrl = supabase.storage
+          .from('vendor-logos')
+          .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (e) {
+      Get.snackbar('Warning', 'Failed to upload logo: $e');
+      // Fallback to local path or existing URL
+      return logoController.text.trim();
+    }
+  }
+
+  // ================= LOAD VENDOR FOR EDITING =================
+
+  Future<void> loadVendorForEditing(String vendorId) async {
+    try {
+      isLoading.value = true;
+      isEditing.value = true;
+
+      final vendor = await repository.getVendorById(vendorId);
+      currentVendor.value = vendor;
+
+      // Fill form fields
+      nameController.text = vendor.name;
+      countryController.text = vendor.organ ?? '';
+      emailController.text = vendor.email ?? '';
+      websiteController.text = vendor.website ?? '';
+      addressController.text = vendor.address ?? '';
+      logoController.text = vendor.logo ?? '';
+
+      // Clear picked logo
+      pickedLogo.value = null;
+
+      // Fill phone numbers
+      clearPhoneFields();
+      for (var phone in vendor.phones) {
+        phoneControllers.add(TextEditingController(text: phone));
+      }
+      if (phoneControllers.isEmpty) {
+        phoneControllers.add(TextEditingController());
+      }
+
+      update();
+        } catch (e) {
+      Get.snackbar('Error', 'Failed to load vendor: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= RESET FORM =================
+
+  void resetForm() {
+    nameController.clear();
+    countryController.clear();
+    emailController.clear();
+    websiteController.clear();
+    addressController.clear();
+    logoController.clear();
+    clearPhoneFields();
+    pickedLogo.value = null;
+    isEditing.value = false;
+    currentVendor.value = null;
+    formKey.currentState?.reset();
+  }
+
+  // ================= SUBMIT FORM =================
+
+  Future<void> submitForm() async {
+    if (!formKey.currentState!.validate()) return;
+
+    try {
+      isLoading.value = true;
+
+      // Handle logo upload
+      String? logoUrl;
+      if (pickedLogo.value != null) {
+        // Upload new logo
+        logoUrl = await uploadLogoToSupabase();
+      } else {
+        // Use existing URL
+        final existingUrl = logoController.text.trim();
+        logoUrl = existingUrl.isEmpty ? null : existingUrl;
+      }
+
+      // Create vendor object
+      final vendor = Vendor(
+        id: isEditing.value ? currentVendor.value!.id : '',
+        name: nameController.text.trim(),
+        organ: countryController.text.trim(),
+        email: emailController.text.trim().isEmpty ? null : emailController.text.trim(),
+        website: websiteController.text.trim().isEmpty ? null : websiteController.text.trim(),
+        address: addressController.text.trim().isEmpty ? null : addressController.text.trim(),
+        logo: logoUrl,
+        phones: phoneControllers
+            .map((c) => c.text.trim())
+            .where((phone) => phone.isNotEmpty)
+            .toList(),
+        createdAt: isEditing.value ? currentVendor.value!.createdAt : DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // Save to repository
+      if (isEditing.value) {
+        await repository.updateVendor(vendor);
+        Get.snackbar('Success', 'Vendor updated successfully');
+      } else {
+        await repository.createVendor(vendor);
+        Get.snackbar('Success', 'Vendor created successfully');
+      }
+
+      resetForm();
+      Get.back(result: true);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to save vendor: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ================= VALIDATION =================
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) return null;
+    if (!GetUtils.isEmail(value)) return 'Please enter a valid email';
+    return null;
+  }
+
+  String? validateRequired(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return '$fieldName is required';
+    }
+    return null;
+  }
+
+  // ================= DISPOSE =================
 
   @override
   void onClose() {
@@ -35,185 +242,11 @@ class VendorFormController extends GetxController {
     websiteController.dispose();
     addressController.dispose();
     logoController.dispose();
+
     for (var controller in phoneControllers) {
       controller.dispose();
     }
+
     super.onClose();
   }
-
-  // Initialize form with existing vendor data
-  void initializeForm(Vendor vendor) {
-    isEditing.value = true;
-    vendorId.value = vendor.id;
-
-    nameController.text = vendor.name;
-    countryController.text = vendor.organ ?? '';
-    emailController.text = vendor.email ?? '';
-    websiteController.text = vendor.website ?? '';
-    addressController.text = vendor.address ?? '';
-    logoController.text = vendor.logo ?? '';
-
-    // Clear existing phone controllers
-    for (var controller in phoneControllers) {
-      controller.dispose();
-    }
-    phoneControllers.clear();
-
-    // Add phone controllers for each phone
-    if (vendor.phone.isNotEmpty) {
-      for (var phone in vendor.phone) {
-        phoneControllers.add(TextEditingController(text: phone));
-      }
-    } else {
-      phoneControllers.add(TextEditingController());
-    }
-  }
-
-  // Add phone field
-  void addPhoneField() {
-    phoneControllers.add(TextEditingController());
-    update();
-  }
-
-  // Remove phone field
-  void removePhoneField(int index) {
-    if (phoneControllers.length > 1) {
-      phoneControllers[index].dispose();
-      phoneControllers.removeAt(index);
-      update();
-    }
-  }
-
-  // Submit form
-  Future<void> submitForm() async {
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
-
-    isLoading.value = true;
-
-    try {
-      // Collect phone numbers
-      final phoneNumbers = phoneControllers
-          .map((controller) => controller.text.trim())
-          .where((phone) => phone.isNotEmpty)
-          .toList();
-
-      // Create vendor object
-      final vendor = Vendor(
-        id: vendorId.value ?? '', // Will be generated by Supabase for new vendors
-        createdAt: DateTime.now(),
-        name: nameController.text.trim(),
-        organ: countryController.text.trim(),
-        email: emailController.text.trim().isNotEmpty ? emailController.text.trim() : null,
-        website: websiteController.text.trim().isNotEmpty ? websiteController.text.trim() : null,
-        address: addressController.text.trim().isNotEmpty ? addressController.text.trim() : null,
-        logo: logoController.text.trim().isNotEmpty ? logoController.text.trim() : null,
-        phone: phoneNumbers,
-      );
-
-      if (isEditing.value && vendorId.value != null) {
-        // Update existing vendor
-        await _updateVendor(vendor);
-      } else {
-        // Create new vendor
-        await _createVendor(vendor);
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to save vendor: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> _createVendor(Vendor vendor) async {
-    try {
-      // Prepare data for Supabase
-      final vendorData = vendor.toJson();
-      // Remove id if empty (will be generated by Supabase)
-      if (vendorData['id'] == '') {
-        vendorData.remove('id');
-      }
-
-      final response = await _supabase
-          .from('vendors')
-          .insert(vendorData)
-          .select()
-          .single();
-
-      Get.snackbar(
-        'Success',
-        'Vendor added successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      // Navigate back to vendor list
-      Get.until((route) => route.settings.name == '/vendors');
-    } catch (e) {
-      throw Exception('Failed to create vendor: $e');
-    }
-  }
-
-  Future<void> _updateVendor(Vendor vendor) async {
-    try {
-      final vendorData = vendor.toJson();
-
-      await _supabase
-          .from('vendors')
-          .update(vendorData)
-          .eq('id', vendorId.value!);
-
-      Get.snackbar(
-        'Success',
-        'Vendor updated successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      // Navigate back to vendor detail or list
-      Get.until((route) => route.settings.name?.startsWith('/vendor/') ?? false);
-    } catch (e) {
-      throw Exception('Failed to update vendor: $e');
-    }
-  }
-
-  Future<void> deleteVendor() async {
-    if (vendorId.value == null) return;
-
-    isLoading.value = true;
-
-    try {
-      await _supabase
-          .from('vendors')
-          .delete()
-          .eq('id', vendorId.value!);
-
-      Get.snackbar(
-        'Success',
-        'Vendor deleted successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      // Navigate back to vendor list
-      Get.offNamedUntil('/vendors', (route) => false);
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to delete vendor: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-
 }

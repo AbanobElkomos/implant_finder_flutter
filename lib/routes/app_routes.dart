@@ -12,17 +12,9 @@ abstract class Routes {
   static const PROFILE = '/profile';
   static const EDIT_PROFILE = '/edit-profile';
 
-  // Vendor Routes (Core Feature)
+  // Vendor Routes
   static const VENDOR_LIST = '/vendors';
   static const VENDOR_DETAIL = '/vendor/detail';
   static const VENDOR_ADD = '/vendor/add';
   static const VENDOR_EDIT = '/vendor/edit';
-
-  // Optional: Dashboard
-  static const DASHBOARD = '/dashboard';
-}
-
-abstract class RouteParams {
-  static const VENDOR_ID = 'id';
-  static const VENDOR_DATA = 'vendor';
 }

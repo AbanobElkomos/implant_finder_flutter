@@ -1,3 +1,4 @@
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -48,7 +49,14 @@ class MyApp extends StatelessWidget {
       translations: TranslationService(),
       locale: Get.deviceLocale,
       fallbackLocale: const Locale('en', 'US'),
-
+supportedLocales: [
+  const Locale('en'),
+  const Locale('ar'),
+],
+      localizationsDelegates:const [
+        CountryLocalizations.delegate,
+        
+      ],
       // ============ Initial Binding ============
       initialBinding: InitialBinding(),
 

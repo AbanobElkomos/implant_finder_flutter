@@ -1,3 +1,4 @@
+// lib/modules/auth/controllers/auth_controller.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,42 +18,36 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final rememberMe = false.obs;
   final session = Rx<Session?>(null);
-  final isInitialized = false.obs;
 
   StreamSubscription<AuthState>? _authSub;
 
   @override
   void onInit() {
     super.onInit();
-    initializeAuth();
-  }
 
-  void initializeAuth() {
-    if (isInitialized.value) return;
-
-    // Load existing session
+    // Load existing session (SDK-persisted)
     session.value = supabase.auth.currentSession;
 
-    // Listen to Supabase auth events
+    // Listen to Supabase auth events (supabase_flutter 2.x)
     _authSub = supabase.auth.onAuthStateChange.listen((AuthState authState) {
       session.value = authState.session;
-      print('🔐 Auth state changed: ${authState.event}');
 
-      // Handle auth events WITHOUT auto-navigation
-      // Let the app handle navigation based on business logic
+      if (authState.event == AuthChangeEvent.signedIn ||
+          authState.event == AuthChangeEvent.tokenRefreshed) {
+        // user now has a valid session → auto go home
+        Get.offAllNamed(Routes.HOME);
+      }
+
       if (authState.event == AuthChangeEvent.signedOut) {
-        // Clear local data
-        emailController.clear();
-        passwordController.clear();
+        Get.offAllNamed(Routes.LOGIN);
       }
     });
 
-    _restorePreferences();
-    isInitialized.value = true;
-    print('✅ AuthController initialized');
+    // Restore "remember me" preference (email-only) and auto-login if session exists
+    _restorePreferencesAndAutoLogin();
   }
 
-  Future<void> _restorePreferences() async {
+  Future<void> _restorePreferencesAndAutoLogin() async {
     rememberMe.value = box.read('remember_me') ?? false;
 
     if (rememberMe.value) {
@@ -62,9 +57,11 @@ class AuthController extends GetxController {
       }
     }
 
-    // ⚠️ تمت إزالة auto-redirect
-    // لا تحول تلقائياً إلى أي route هنا
-    // دع main.dart أو routing system يتحكم في ذلك
+    // If a session already exists, auto-navigate
+    if (session.value != null) {
+      await Future.delayed(Duration(milliseconds: 200));
+      Get.offAllNamed(Routes.HOME);
+    }
   }
 
   Future<void> signUp() async {
@@ -84,24 +81,13 @@ class AuthController extends GetxController {
         });
 
         if (supabase.auth.currentSession != null) {
-          // Manual navigation بعد signup ناجح
           Get.offAllNamed(Routes.HOME);
         } else {
-          Get.snackbar(
-            "Success",
-            "Check your email for verification.",
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
+          Get.snackbar("Success", "Check your email for verification.");
         }
       }
     } catch (e) {
-      Get.snackbar(
-        "Error",
-        e.toString(),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", e.toString());
     } finally {
       isLoading.value = false;
     }
@@ -114,22 +100,17 @@ class AuthController extends GetxController {
       final password = passwordController.text.trim();
 
       if (email.isEmpty || password.isEmpty) {
-        Get.snackbar(
-          "Error",
-          "Email and password required",
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
+        Get.snackbar("Error", "Email and password required");
         return;
       }
 
-      // Store only email when rememberMe is ON
+      // Store only email when rememberMe is ON (never store password)
       if (rememberMe.value) {
-        box.write('remember_me', true);
-        box.write('email', email);
+        await box.write('remember_me', true);
+        await box.write('email', email);
       } else {
-        box.write('remember_me', false);
-        box.remove('email');
+        await box.write('remember_me', false);
+        await box.remove('email');
       }
 
       final response = await supabase.auth.signInWithPassword(
@@ -138,45 +119,23 @@ class AuthController extends GetxController {
       );
 
       if (response.session != null) {
-        // Manual navigation بعد login ناجح
+        // navigation will also be triggered by the auth state listener,
+        // but we can navigate immediately as well:
         Get.offAllNamed(Routes.HOME);
       } else {
-        Get.snackbar(
-          "Error",
-          "Invalid login",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        Get.snackbar("Error", "Invalid login");
       }
     } catch (e) {
-      Get.snackbar(
-        "Error",
-        e.toString(),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", e.toString());
     } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> signOut() async {
-    try {
-      await supabase.auth.signOut();
-      // Manual navigation بعد logout
-      Get.offAllNamed(Routes.LOGIN);
-    } catch (e) {
-      Get.snackbar(
-        "Error",
-        e.toString(),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
+    await supabase.auth.signOut();
+    Get.offAllNamed(Routes.LOGIN);
   }
-
-  // Check if user is authenticated
-  bool get isAuthenticated => session.value != null;
 
   @override
   void onClose() {

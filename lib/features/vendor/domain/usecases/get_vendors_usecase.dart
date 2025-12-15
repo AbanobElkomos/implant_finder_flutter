@@ -1,4 +1,4 @@
-import '../../data/repositories/vendor_repository_impl.dart';
+import '../../data/repositories/vendor_repository.dart';
 import '../models/vendor.dart';
 
 class GetVendorsUseCase {
@@ -6,17 +6,7 @@ class GetVendorsUseCase {
 
   GetVendorsUseCase(this.repository);
 
-  Future<List<Vendor>> execute() async {
-    return await repository.getVendors();
-  }
-}
-
-class GetVendorsByCountryUseCase {
-  final VendorRepository repository;
-
-  GetVendorsByCountryUseCase(this.repository);
-
-  Future<List<Vendor>> execute(String country) async {
-    return await repository.getVendorsByCountry(country);
+  Future<List<Vendor>> execute() {
+    return repository.getVendors();
   }
 }

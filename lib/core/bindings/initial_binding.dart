@@ -11,6 +11,5 @@ class InitialBinding extends Bindings {
       tag: 'supabase',
     );
 
-    print('✅ SupabaseClient registered in GetX');
-  }
+   }
 }

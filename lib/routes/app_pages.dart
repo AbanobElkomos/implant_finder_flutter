@@ -7,11 +7,10 @@ import '../features/home/presentation/views/home_view.dart';
 import '../features/profile/presentation/bindings/profile_binding.dart';
 import '../features/profile/presentation/views/profile_view.dart';
 import '../features/profile/presentation/views/edit_profile_view.dart';
-import '../features/vendor/domain/models/vendor.dart';
-import '../features/vendor/presentation/bindings/vendor_binding.dart';
+ import '../features/vendor/presentation/bindings/vendor_binding.dart';
+import '../features/vendor/presentation/views/vendor_details_view.dart';
 import '../features/vendor/presentation/views/vendor_list_view.dart';
-import '../features/vendor/presentation/views/vendor_detail_view.dart';
-import '../features/vendor/presentation/views/vendor_form_view.dart';
+ import '../features/vendor/presentation/views/vendor_form_view.dart';
 
 part 'app_routes.dart';
 
@@ -64,20 +63,24 @@ class AppPages {
       binding: VendorBinding(), // ✅
     ),
 
+    // Vendor Details Route with parameter
     GetPage(
       name: '${Routes.VENDOR_DETAIL}/:id',
       page: () {
-        if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
-          return VendorDetailView(vendor: Vendor.fromJson(Get.arguments));
-        }
-        return VendorDetailView(vendor: Vendor(
-          id: Get.parameters['id'] ?? '',
-          createdAt: DateTime.now(),
-          name: 'Loading...',
-        ));
+        final vendorId = Get.parameters['id'] ?? '';
+        return VendorDetailsView(vendorId: vendorId);
       },
+      binding: VendorBinding(),
     ),
-
+    // Vendor Edit Route with parameter
+    GetPage(
+      name: '${Routes.VENDOR_EDIT}/:id',
+      page: () {
+        final vendorId = Get.parameters['id'] ?? '';
+        return VendorFormView(vendorId: vendorId);
+      },
+      binding: VendorBinding(),
+    ),
     GetPage(
       name: Routes.VENDOR_ADD,
       page: () => VendorFormView(),

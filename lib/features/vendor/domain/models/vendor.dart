@@ -1,95 +1,77 @@
 class Vendor {
   final String id;
-  final DateTime createdAt;
   final String name;
-  final String? logo;
-  final String? website;
-  final String? email;
-  final List<String> phone;
-  final String? address;
-  final String? organ;
+  final String? organ; // Make nullable
+  final String? email; // Make nullable
+  final String? website; // Make nullable
+  final String? address; // Make nullable
+  final String? logo; // Make nullable
+  final List<String> phones;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Vendor({
     required this.id,
-    required this.createdAt,
     required this.name,
-    this.logo,
-    this.website,
-    this.email,
-    this.phone = const [],
-    this.address,
-    this.organ,
+    this.organ, // Already nullable
+    this.email, // Already nullable
+    this.website, // Already nullable
+    this.address, // Already nullable
+    this.logo, // Already nullable
+    this.phones = const [],
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   factory Vendor.fromJson(Map<String, dynamic> json) {
     return Vendor(
-      id: json['id'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      name: json['name'] as String,
-      logo: json['logo'] as String?,
-      website: json['website'] as String?,
-      email: json['email'] as String?,
-      phone: _parsePhoneArray(json['phone']),
-      address: json['address'] as String?,
-      organ: json['organ'] as String?,
+      id: json['id']?.toString() ?? '', // Handle null ID
+      name: json['name']?.toString() ?? 'Unknown Vendor', // Default value
+      organ: json['organ']?.toString(), // Will be null if missing
+      email: json['email']?.toString(),
+      website: json['website']?.toString(),
+      address: json['address']?.toString(),
+      logo: json['logo']?.toString(),
+      phones: _parsePhones(json['phones']), // Helper method
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 
-  static List<String> _parsePhoneArray(dynamic phoneData) {
-    if (phoneData == null) return [];
-
-    if (phoneData is List) {
-      return List<String>.from(phoneData);
-    } else if (phoneData is String) {
-      final cleaned = phoneData
-          .replaceAll('{', '')
-          .replaceAll('}', '')
-          .replaceAll('"', '');
-      if (cleaned.isNotEmpty) {
-        return cleaned.split(',').map((s) => s.trim()).toList();
-      }
+  static List<String> _parsePhones(dynamic phones) {
+    if (phones == null) return [];
+    if (phones is String) return [phones];
+    if (phones is List) {
+      return phones.map((e) => e?.toString() ?? '').where((e) => e.isNotEmpty).toList();
     }
     return [];
+  }
+
+  static DateTime _parseDateTime(dynamic date) {
+    if (date == null) return DateTime.now();
+    if (date is DateTime) return date;
+    if (date is String) {
+      try {
+        return DateTime.parse(date);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'created_at': createdAt.toIso8601String(),
       'name': name,
-      'logo': logo,
-      'website': website,
-      'email': email,
-      'phone': phone,
-      'address': address,
       'organ': organ,
+      'email': email,
+      'website': website,
+      'address': address,
+      'logo': logo,
+      'phones': phones,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
-
-  Vendor copyWith({
-    String? id,
-    DateTime? createdAt,
-    String? name,
-    String? logo,
-    String? website,
-    String? email,
-    List<String>? phone,
-    String? address,
-    String? organ,
-  }) {
-    return Vendor(
-      id: id ?? this.id,
-      createdAt: createdAt ?? this.createdAt,
-      name: name ?? this.name,
-      logo: logo ?? this.logo,
-      website: website ?? this.website,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      address: address ?? this.address,
-      organ: organ ?? this.organ,
-    );
-  }
-
-  @override
-  String toString() => 'Vendor(id: $id, name: $name, country: $organ)';
 }
