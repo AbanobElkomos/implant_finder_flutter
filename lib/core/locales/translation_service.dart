@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-import 'en_US.dart';
-import 'ar_EG.dart';
+import 'en_us.dart';
+import 'ar_eg.dart';
 
 class TranslationService extends Translations {
   @override

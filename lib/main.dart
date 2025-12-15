@@ -28,20 +28,22 @@ void main() async {
     defaultTransition: Transition.cupertino,
   );
 
-  print('🚀 App initialized');
 
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: AppConstants.appName,
       theme: ThemeData(
         primaryColor: MyAppColors.primaryColor,
-        colorScheme: ColorScheme.fromSwatch()
-            .copyWith(secondary: MyAppColors.accentColor),
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: MyAppColors.accentColor,
+        ),
         useMaterial3: true,
       ),
 
@@ -49,14 +51,8 @@ class MyApp extends StatelessWidget {
       translations: TranslationService(),
       locale: Get.deviceLocale,
       fallbackLocale: const Locale('en', 'US'),
-supportedLocales: [
-  const Locale('en'),
-  const Locale('ar'),
-],
-      localizationsDelegates:const [
-        CountryLocalizations.delegate,
-        
-      ],
+      supportedLocales: [const Locale('en'), const Locale('ar')],
+      localizationsDelegates: const [CountryLocalizations.delegate],
       // ============ Initial Binding ============
       initialBinding: InitialBinding(),
 
@@ -79,7 +75,6 @@ supportedLocales: [
     try {
       // تحقق إذا كان هناك جلسة نشطة
       final session = Supabase.instance.client.auth.currentSession;
-      print('🔐 Current session: ${session != null ? "Active" : "None"}');
 
       if (session != null) {
         return Routes.HOME; // المستخدم مسجل دخول
@@ -87,7 +82,6 @@ supportedLocales: [
         return Routes.LOGIN; // المستخدم غير مسجل
       }
     } catch (e) {
-      print('❌ Error checking auth: $e');
       return Routes.LOGIN; // في حالة خطأ، اذهب إلى login
     }
   }

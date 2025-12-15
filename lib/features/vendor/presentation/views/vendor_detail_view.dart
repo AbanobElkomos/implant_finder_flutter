@@ -7,7 +7,7 @@ import '../../domain/models/vendor.dart';
 class VendorDetailView extends GetView {
   final Vendor vendor;
 
-  VendorDetailView({required this.vendor});
+  const VendorDetailView({super.key, required this.vendor});
 
   @override
   Widget build(BuildContext context) {

@@ -8,6 +8,8 @@ import '../../../../core/constants/colors.dart';
 import '../controllers/auth_controller.dart';
 
 class SignUpView extends GetView<AuthController> {
+  const SignUpView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,24 +72,28 @@ class SignUpView extends GetView<AuthController> {
               20.heightBox,
               Obx(
                 () => PageTransitionSwitcher(
-                  transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-                    return FadeScaleTransition(
-                      animation: primaryAnimation,
-                      child: child,
-                    );
-                  },
+                  transitionBuilder:
+                      (child, primaryAnimation, secondaryAnimation) {
+                        return FadeScaleTransition(
+                          animation: primaryAnimation,
+                          child: child,
+                        );
+                      },
                   child: controller.isLoading.value
                       ? CircularProgressIndicator().centered()
                       : ElevatedButton(
                           onPressed: controller.signUp,
-                          child: "Sign Up".text.white.make(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MyAppColors.primaryColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 100,
+                              vertical: 15,
+                            ),
                           ),
+                          child: "Sign Up".text.white.make(),
                         ).centered(),
                 ),
               ),

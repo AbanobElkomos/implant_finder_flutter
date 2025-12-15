@@ -9,6 +9,8 @@ import '../../../../routes/app_pages.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginView extends GetView<AuthController> {
+  const LoginView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,34 +48,34 @@ class LoginView extends GetView<AuthController> {
                   ),
                 ),
               ).pSymmetric(h: 16),
-              HStack(
-
-                 [
-                  Obx(
-                    () => TCheckbox(
-                      value: controller.rememberMe.value,
-                      onChanged: (value) {
-                        controller.rememberMe.value = value;
-                      },
-                    ),
+              HStack([
+                Obx(
+                  () => TCheckbox(
+                    value: controller.rememberMe.value,
+                    onChanged: (value) {
+                      controller.rememberMe.value = value;
+                    },
                   ),
-                  "  Remember me".text.make(),
-                ],
-              ).pSymmetric(h: 4),
+                ),
+                "  Remember me".text.make(),
+              ]).pSymmetric(h: 4),
               20.heightBox,
               Obx(
                 () => controller.isLoading.value
                     ? CircularProgressIndicator().centered()
                     : ElevatedButton(
                         onPressed: controller.login,
-                        child: "Login".text.white.make(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MyAppColors.primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 100,
+                            vertical: 15,
+                          ),
                         ),
+                        child: "Login".text.white.make(),
                       ).centered(),
               ),
               10.heightBox,

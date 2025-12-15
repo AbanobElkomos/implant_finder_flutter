@@ -28,7 +28,7 @@ class HomeController extends GetxController {
       countryCount.value = 8;
       activeCount.value = 10;
     } catch (e) {
-      print('Error loading stats: $e');
+      Get.snackbar('Error', 'Failed to load stats: $e');
     } finally {
       isLoading.value = false;
     }

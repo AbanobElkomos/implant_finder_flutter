@@ -25,6 +25,10 @@ class VendorListView extends GetView<VendorController> {
             ),
           ),
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: MyAppColors.white),
+          onPressed: () => Get.back(),
+        ),
       ),
       body: Column(
         children: [
@@ -36,28 +40,29 @@ class VendorListView extends GetView<VendorController> {
 
           // Vendor Grid
           _buildVendorGrid(),
+          50.heightBox,
+
         ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: MyAppColors.primaryColor,
         onPressed: () => Get.toNamed(Routes.VENDOR_ADD), // Use named route
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 4,
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }
 
-  Widget _buildSearchFilterBar(BuildContext context) {  // Add context parameter
+  Widget _buildSearchFilterBar(BuildContext context) {
+    // Add context parameter
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -94,7 +99,9 @@ class VendorListView extends GetView<VendorController> {
                           fontSize: 14,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
                       ),
                       onChanged: (value) {
                         controller.search(value);
@@ -126,12 +133,12 @@ class VendorListView extends GetView<VendorController> {
           Obx(() {
             final hasActiveFilters =
                 controller.selectedCountry.isNotEmpty ||
-                    controller.searchQuery.isNotEmpty;
+                controller.searchQuery.isNotEmpty;
 
             return Container(
               decoration: BoxDecoration(
                 color: hasActiveFilters
-                    ? MyAppColors.primaryColor.withOpacity(0.1)
+                    ? MyAppColors.primaryColor.withValues(alpha: 0.1)
                     : Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
@@ -149,7 +156,8 @@ class VendorListView extends GetView<VendorController> {
                       : Colors.grey[600],
                   size: 22,
                 ),
-                onPressed: () => _showFilterOptions(context),  // Pass context here
+                onPressed: () =>
+                    _showFilterOptions(context), // Pass context here
                 tooltip: 'Filter vendors',
               ),
             );
@@ -170,9 +178,7 @@ class VendorListView extends GetView<VendorController> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          border: Border(
-            bottom: BorderSide(color: Colors.grey[200]!),
-          ),
+          border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
         ),
         child: Row(
           children: [
@@ -215,18 +221,11 @@ class VendorListView extends GetView<VendorController> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.close,
-                      color: Colors.grey[600],
-                      size: 16,
-                    ),
+                    Icon(Icons.close, color: Colors.grey[600], size: 16),
                     4.widthBox,
                     Text(
                       'Clear all',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                   ],
                 ),
@@ -245,7 +244,9 @@ class VendorListView extends GetView<VendorController> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: MyAppColors.primaryColor.withOpacity(0.3)),
+        border: Border.all(
+          color: MyAppColors.primaryColor.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -262,11 +263,7 @@ class VendorListView extends GetView<VendorController> {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.close,
-              size: 14,
-              color: Colors.grey[500],
-            ),
+            icon: Icon(Icons.close, size: 14, color: Colors.grey[500]),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -289,16 +286,15 @@ class VendorListView extends GetView<VendorController> {
                   height: 40,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation(MyAppColors.primaryColor),
+                    valueColor: AlwaysStoppedAnimation(
+                      MyAppColors.primaryColor,
+                    ),
                   ),
                 ),
                 16.heightBox,
                 Text(
                   'Loading vendors...',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
               ],
             ),
@@ -312,11 +308,7 @@ class VendorListView extends GetView<VendorController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: Colors.red[400],
-                ),
+                Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
                 16.heightBox,
                 controller.error.value.text
                     .size(16)
@@ -327,17 +319,17 @@ class VendorListView extends GetView<VendorController> {
                 24.heightBox,
                 ElevatedButton.icon(
                   onPressed: controller.loadVendors,
-                  icon: const Icon(
-                    Icons.refresh,
-                    color: Colors.white,
-                  ),
+                  icon: const Icon(Icons.refresh, color: Colors.white),
                   label: const Text(
                     'Try Again',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MyAppColors.primaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -355,11 +347,7 @@ class VendorListView extends GetView<VendorController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.search_off,
-                  size: 64,
-                  color: Colors.grey[300],
-                ),
+                Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
                 16.heightBox,
                 Text(
                   'No vendors found',
@@ -372,10 +360,7 @@ class VendorListView extends GetView<VendorController> {
                 8.heightBox,
                 Text(
                   'Try adjusting your search or filters',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
                 16.heightBox,
                 OutlinedButton(
@@ -420,9 +405,8 @@ class VendorListView extends GetView<VendorController> {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
-        controller.selectVendor(vendor.id);
+        // controller.selectVendor(vendor.id);
         Get.toNamed('${Routes.VENDOR_DETAIL}/${vendor.id}');
-
       },
       child: Container(
         decoration: BoxDecoration(
@@ -430,7 +414,7 @@ class VendorListView extends GetView<VendorController> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -450,25 +434,28 @@ class VendorListView extends GetView<VendorController> {
                   color: Colors.grey[50],
                   child: (vendor.logo != null && vendor.logo!.isNotEmpty)
                       ? Image.network(
-                    vendor.logo!,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (_, __, ___) => _logoFallback(vendor),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                              : null,
-                          strokeWidth: 2,
-                          color: MyAppColors.primaryColor.withOpacity(0.5),
-                        ),
-                      );
-                    },
-                  )
+                          vendor.logo!,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (_, _, _) => _logoFallback(vendor),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                                color: MyAppColors.primaryColor.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            );
+                          },
+                        )
                       : _logoFallback(vendor),
                 ),
               ),
@@ -527,7 +514,7 @@ class VendorListView extends GetView<VendorController> {
 
   Widget _logoFallback(Vendor vendor) {
     return Container(
-      color: MyAppColors.primaryColor.withOpacity(0.1),
+      color: MyAppColors.primaryColor.withValues(alpha: 0.1),
       alignment: Alignment.center,
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -536,7 +523,7 @@ class VendorListView extends GetView<VendorController> {
           Icon(
             Icons.storefront_outlined,
             size: 32,
-            color: MyAppColors.primaryColor.withOpacity(0.6),
+            color: MyAppColors.primaryColor.withValues(alpha: 0.6),
           ),
           8.heightBox,
           Text(
@@ -562,11 +549,10 @@ class VendorListView extends GetView<VendorController> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (BuildContext context) {  // Explicitly type the builder parameter
+      builder: (BuildContext context) {
+        // Explicitly type the builder parameter
         return SafeArea(
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.7,
@@ -605,10 +591,7 @@ class VendorListView extends GetView<VendorController> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          color: Colors.grey[500],
-                        ),
+                        icon: Icon(Icons.close, color: Colors.grey[500]),
                         onPressed: () => Get.back(),
                       ),
                     ],
@@ -647,10 +630,13 @@ class VendorListView extends GetView<VendorController> {
                               ...controller.countries.map((country) {
                                 return _buildCountryChip(
                                   label: country,
-                                  isSelected: controller.selectedCountry == country,
-                                  onTap: () => controller.setCountryFilter(country),
+                                  isSelected:
+                                      controller.selectedCountry.value ==
+                                      country,
+                                  onTap: () =>
+                                      controller.setCountryFilter(country),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           ),
                           24.heightBox,
@@ -662,15 +648,16 @@ class VendorListView extends GetView<VendorController> {
 
                 // Apply Button
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border(
-                      top: BorderSide(color: Colors.grey[200]!),
-                    ),
+                    border: Border(top: BorderSide(color: Colors.grey[200]!)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, -2),
                       ),
@@ -714,14 +701,10 @@ class VendorListView extends GetView<VendorController> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? MyAppColors.primaryColor
-              : Colors.grey[100],
+          color: isSelected ? MyAppColors.primaryColor : Colors.grey[100],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? MyAppColors.primaryColor
-                : Colors.grey[300]!,
+            color: isSelected ? MyAppColors.primaryColor : Colors.grey[300]!,
             width: 1.5,
           ),
         ),

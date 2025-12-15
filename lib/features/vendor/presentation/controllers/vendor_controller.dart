@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/repositories/vendor_repository.dart';
 import '../../domain/models/vendor.dart';
-import '../../domain/usecases/SearchVendorsUseCase.dart';
+import '../../domain/usecases/search_vendors_usecase.dart';
 import '../../domain/usecases/get_vendors_by_country_usecase.dart';
 import '../../domain/usecases/get_vendors_usecase.dart';
 

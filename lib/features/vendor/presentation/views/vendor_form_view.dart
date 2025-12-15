@@ -40,7 +40,7 @@ class VendorFormView extends GetView<VendorFormController> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              MyAppColors.primaryColor.withOpacity(0.03),
+              MyAppColors.primaryColor.withValues(alpha:0.03),
               Colors.transparent,
             ],
             stops: const [0.0, 0.2],
@@ -108,7 +108,7 @@ class VendorFormView extends GetView<VendorFormController> {
               // Submit Button
               32.heightBox,
               _buildSubmitButton(),
-              100.heightBox,
+              50.heightBox,
             ],
           ),
         ),
@@ -123,7 +123,7 @@ class VendorFormView extends GetView<VendorFormController> {
         Icon(
           Icons.storefront_outlined,
           size: 40,
-          color: MyAppColors.primaryColor.withOpacity(0.8),
+          color: MyAppColors.primaryColor.withValues(alpha:0.8),
         ),
         12.heightBox,
         Text(
@@ -148,7 +148,7 @@ class VendorFormView extends GetView<VendorFormController> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: MyAppColors.primaryColor.withOpacity(0.1),
+        color: MyAppColors.primaryColor.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -185,7 +185,7 @@ class VendorFormView extends GetView<VendorFormController> {
           border: Border.all(color: Colors.grey[200]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha:0.03),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -254,7 +254,7 @@ class VendorFormView extends GetView<VendorFormController> {
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(
             borderSide: BorderSide(
-              color: const Color(0xFF8C98A8).withOpacity(0.2),
+              color: const Color(0xFF8C98A8).withValues(alpha:0.2),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -292,7 +292,7 @@ class VendorFormView extends GetView<VendorFormController> {
             12.widthBox,
             Container(
               decoration: BoxDecoration(
-                color: MyAppColors.primaryColor.withOpacity(0.1),
+                color: MyAppColors.primaryColor.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: IconButton(
@@ -390,7 +390,7 @@ class VendorFormView extends GetView<VendorFormController> {
               border: Border.all(color: Colors.grey[200]!),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha:0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -407,7 +407,7 @@ class VendorFormView extends GetView<VendorFormController> {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: MyAppColors.primaryColor.withOpacity(0.1),
+                            color: MyAppColors.primaryColor.withValues(alpha:0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -507,7 +507,7 @@ class VendorFormView extends GetView<VendorFormController> {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha:0.03),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -559,11 +559,11 @@ class VendorFormView extends GetView<VendorFormController> {
           ? Container(
               height: 54,
               decoration: BoxDecoration(
-                color: MyAppColors.primaryColor.withOpacity(0.9),
+                color: MyAppColors.primaryColor.withValues(alpha:0.9),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: MyAppColors.primaryColor.withOpacity(0.3),
+                    color: MyAppColors.primaryColor.withValues(alpha:0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -578,7 +578,7 @@ class VendorFormView extends GetView<VendorFormController> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation(
-                        Colors.white.withOpacity(0.8),
+                        Colors.white.withValues(alpha:0.8),
                       ),
                     ),
                   ),
@@ -604,7 +604,7 @@ class VendorFormView extends GetView<VendorFormController> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 3,
-                shadowColor: MyAppColors.primaryColor.withOpacity(0.3),
+                shadowColor: MyAppColors.primaryColor.withValues(alpha:0.3),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -38,7 +38,6 @@ class ProfileController extends GetxController {
         profile.value = null; // Explicitly set to null
       }
     } catch (e) {
-      print(e.toString());
       Get.snackbar('Error', 'An error occurred while fetching your profile.');
       profile.value = null; // Ensure profile is null on error
     }

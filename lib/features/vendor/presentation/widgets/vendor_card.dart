@@ -9,11 +9,11 @@ class VendorCard extends StatelessWidget {
   final bool showDetails;
 
   const VendorCard({
-    Key? key,
+    super.key,
     required this.vendor,
     required this.onTap,
     this.showDetails = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class VendorCard extends StatelessWidget {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: MyAppColors.primaryColor.withOpacity(0.1),
+                      color: MyAppColors.primaryColor.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: vendor.logo != null

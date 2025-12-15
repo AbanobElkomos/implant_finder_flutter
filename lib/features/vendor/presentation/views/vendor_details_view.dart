@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:velocity_x/velocity_x.dart';
 import '../../../../core/constants/colors.dart';
 import '../../domain/models/vendor.dart';
@@ -76,16 +77,20 @@ class VendorDetailsView extends GetView<VendorController> {
       appBar: AppBar(
         title: Text(
           vendor.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: GoogleFonts.lato(
+            color: MyAppColors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         backgroundColor: MyAppColors.primaryColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: MyAppColors.white),
           onPressed: () => Get.back(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined),
+            icon: const Icon(Icons.edit_outlined, color: MyAppColors.white),
             onPressed: () {
               // Navigate to edit form using the vendor ID
               Get.toNamed('/vendor/edit/${vendor.id}');
@@ -106,7 +111,7 @@ class VendorDetailsView extends GetView<VendorController> {
                   ? Image.network(
                 vendor.logo!,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => _buildLogoFallback(vendor),
+                errorBuilder: (_, _, _) => _buildLogoFallback(vendor),
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Center(
@@ -116,7 +121,7 @@ class VendorDetailsView extends GetView<VendorController> {
                           loadingProgress.expectedTotalBytes!
                           : null,
                       strokeWidth: 2,
-                      color: MyAppColors.primaryColor.withOpacity(0.5),
+                      color: MyAppColors.primaryColor.withValues(alpha:0.5),
                     ),
                   );
                 },
@@ -225,7 +230,7 @@ class VendorDetailsView extends GetView<VendorController> {
                                   width: 32,
                                   height: 32,
                                   decoration: BoxDecoration(
-                                    color: MyAppColors.primaryColor.withOpacity(0.1),
+                                    color: MyAppColors.primaryColor.withValues(alpha:0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -261,7 +266,7 @@ class VendorDetailsView extends GetView<VendorController> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -412,6 +417,8 @@ class VendorDetailsView extends GetView<VendorController> {
                 ),
               ),
             ),
+            50.heightBox,
+
           ],
         ),
       ),
@@ -420,14 +427,14 @@ class VendorDetailsView extends GetView<VendorController> {
 
   Widget _buildLogoFallback(Vendor vendor) {
     return Container(
-      color: MyAppColors.primaryColor.withOpacity(0.1),
+      color: MyAppColors.primaryColor.withValues(alpha:0.1),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.storefront_outlined,
             size: 48,
-            color: MyAppColors.primaryColor.withOpacity(0.6),
+            color: MyAppColors.primaryColor.withValues(alpha:0.6),
           ),
           8.heightBox,
           Text(
