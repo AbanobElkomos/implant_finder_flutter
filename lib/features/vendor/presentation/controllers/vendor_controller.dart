@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/repositories/vendor_repository.dart';
 import '../../domain/models/vendor.dart';
+import '../../domain/usecases/get_top_vendors_usecase.dart';
 import '../../domain/usecases/search_vendors_usecase.dart';
 import '../../domain/usecases/get_vendors_by_country_usecase.dart';
 import '../../domain/usecases/get_vendors_usecase.dart';
@@ -39,6 +40,7 @@ class VendorController extends GetxController {
 
   // ================= USE CASES =================
   late final GetVendorsUseCase _getVendors;
+  late final GetTopVendorsUseCase _getTopVendors;
   late final GetVendorsByCountryUseCase _getVendorsByCountry;
   late final SearchVendorsUseCase _searchVendors;
 
@@ -47,6 +49,7 @@ class VendorController extends GetxController {
     super.onInit();
 
     _getVendors = GetVendorsUseCase(repository);
+    _getTopVendors=GetTopVendorsUseCase(repository);
     _getVendorsByCountry = GetVendorsByCountryUseCase(repository);
     _searchVendors = SearchVendorsUseCase(repository);
 
@@ -69,7 +72,28 @@ class VendorController extends GetxController {
 
   // ================= LOAD =================
 
-  Future<void> loadVendors() async {
+  Future<void> loadTopVendors() async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final result = await _getTopVendors.execute();
+
+      vendors.assignAll(result);
+      filteredVendors.assignAll(result);
+
+      _extractCountries(result);
+    } catch (e) {
+      error.value = e.toString();
+      vendors.clear();
+      filteredVendors.clear();
+    } finally {
+      isLoading.value = false;
+    }
+
+  }
+
+    Future<void> loadVendors() async {
     try {
       isLoading.value = true;
       error.value = '';

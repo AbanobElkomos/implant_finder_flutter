@@ -23,6 +23,22 @@ class VendorRepositoryImpl implements VendorRepository {
       throw Exception('Failed to fetch vendors: $e');
     }
   }
+  // ================= GET top 5 =================
+  @override
+  Future<List<Vendor>> getTopVendors() async {
+    try {
+      final response = await supabase
+          .from('vendors')
+          .select()
+          .order('random()') // Order by a random value
+          .limit(5); // Limit to 5 items
+      return (response as List)
+          .map((json) => Vendor.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch vendors: $e');
+    }
+  }
 
   // ================= GET BY ID (FIXED) =================
   @override

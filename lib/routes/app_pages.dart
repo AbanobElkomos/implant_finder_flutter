@@ -40,7 +40,7 @@ class AppPages {
     // ============ Home Route ============
     GetPage(
       name: Routes.HOME,
-      page: () => HomeView(),
+      page: () => HomeView( ),
       binding: HomeBinding(), // ⬅️ ⚠️ هذا السطر الناقص!
       transition: Transition.fadeIn,
     ),
